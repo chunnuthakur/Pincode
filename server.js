@@ -9,8 +9,8 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Corrected MySQL Database Connection
-const dbConfig = {
+// ✅ MySQL Database Connection
+const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -19,39 +19,21 @@ const dbConfig = {
   connectionLimit: 10,
   queueLimit: 0,
   multipleStatements: true,
-  dateStrings: true, 
-};
+  dateStrings: true
+});
 
-let db;
-function handleDatabaseConnection() {
-  db = mysql.createConnection(dbConfig);
+db.connect((err) => {
+  if (err) {
+    console.error("Database connection failed:", err);
+    setTimeout(() => db.connect(), 2000);
+  } else {
+    console.log("Connected to MySQL Database");
+  }
+});
 
-  db.connect((err) => {
-    if (err) {
-      console.error("Database connection failed:", err);
-      setTimeout(handleDatabaseConnection, 2000);
-    } else {
-      console.log("Connected to MySQL Database");
-    }
-  });
-
-  db.on("error", (err) => {
-    console.error("Database error:", err);
-    if (err.code === "PROTOCOL_CONNECTION_LOST" || err.code === "ECONNRESET") {
-      console.log("Reconnecting to MySQL...");
-      handleDatabaseConnection();
-    } else {
-      throw err;
-    }
-  });
-}
-
-handleDatabaseConnection();
-
-// ✅ API Route to handle form submission
+// ✅ API Route
 app.post("/submit", (req, res) => {
   const { mobile, pincode } = req.body;
-
   if (!mobile || !pincode) {
     return res.status(400).json({ error: "Missing required fields" });
   }
