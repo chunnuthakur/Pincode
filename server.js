@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");// this version of mysql is uesd to store the data and to connect to the database
 const cors = require("cors");
